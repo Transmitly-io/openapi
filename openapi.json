@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Transmitly API",
-    "version": "1.9.0",
+    "version": "1.10.0",
     "description": "Durable email acceptance, delivery events and inbound routing. Acceptance (202) means committed to Postgres; delivered_to_mx means the remote MX accepted the message, not inbox placement.",
     "contact": {
       "email": "support@transmitly.io"
@@ -1118,6 +1118,153 @@
             "type": "integer",
             "minimum": 1,
             "maximum": 30
+          }
+        }
+      },
+      "AuditItem": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pass",
+              "warn",
+              "fail",
+              "info"
+            ]
+          },
+          "detail": {
+            "type": "string"
+          },
+          "fix": {
+            "type": "string"
+          }
+        }
+      },
+      "DomainAudit": {
+        "type": "object",
+        "properties": {
+          "domain_id": {
+            "type": "string"
+          },
+          "domain": {
+            "type": "string"
+          },
+          "org_name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pass",
+              "warn",
+              "fail"
+            ]
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditItem"
+            }
+          },
+          "checked_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "BlocklistCheck": {
+        "type": "object",
+        "properties": {
+          "zone": {
+            "type": "string"
+          },
+          "listed": {
+            "type": "boolean"
+          },
+          "response": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          },
+          "checked_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "IPAudit": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "ip": {
+            "type": "string"
+          },
+          "node": {
+            "type": "string"
+          },
+          "hostname": {
+            "type": "string"
+          },
+          "ptr_verified": {
+            "type": "boolean"
+          },
+          "spf_verified": {
+            "type": "boolean"
+          },
+          "blocklists": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BlocklistCheck"
+            }
+          },
+          "impact": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pass",
+              "warn",
+              "fail"
+            ]
+          }
+        }
+      },
+      "DeliverabilityAudit": {
+        "type": "object",
+        "properties": {
+          "domains": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DomainAudit"
+            }
+          },
+          "ips": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IPAudit"
+            }
+          },
+          "zones": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "checked_at": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       }
@@ -2769,6 +2916,65 @@
         "responses": {
           "200": {
             "description": "Released"
+          }
+        }
+      }
+    },
+    "/v1/domains/{id}/audit": {
+      "get": {
+        "summary": "Run a live deliverability audit for one sending domain",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Domain audit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "audit": {
+                      "$ref": "#/components/schemas/DomainAudit"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/deliverability/audit": {
+      "get": {
+        "summary": "Run the platform deliverability audit (platform admin)",
+        "responses": {
+          "200": {
+            "description": "Domain and sending-IP audit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliverabilityAudit"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/deliverability/blocklists/refresh": {
+      "post": {
+        "summary": "Refresh DNSBL checks for all sending IPs (platform admin)",
+        "responses": {
+          "200": {
+            "description": "Refresh result"
           }
         }
       }
