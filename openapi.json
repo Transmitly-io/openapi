@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Transmitly API",
-    "version": "1.10.0",
+    "version": "1.11.0",
     "description": "Durable email acceptance, delivery events and inbound routing. Acceptance (202) means committed to Postgres; delivered_to_mx means the remote MX accepted the message, not inbox placement.",
     "contact": {
       "email": "support@transmitly.io"
@@ -1265,6 +1265,25 @@
           "checked_at": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "SendingIPControlInput": {
+        "type": "object",
+        "properties": {
+          "pool_weight": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "warming",
+              "paused",
+              "quarantined"
+            ]
           }
         }
       }
@@ -2975,6 +2994,36 @@
         "responses": {
           "200": {
             "description": "Refresh result"
+          }
+        }
+      }
+    },
+    "/v1/mta/ips/{id}": {
+      "patch": {
+        "summary": "Set a sending IP weight or lifecycle status (platform admin)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendingIPControlInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated IP"
           }
         }
       }
