@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Transmitly API",
-    "version": "1.11.0",
+    "version": "1.12.0",
     "description": "Durable email acceptance, delivery events and inbound routing. Acceptance (202) means committed to Postgres; delivered_to_mx means the remote MX accepted the message, not inbox placement.",
     "contact": {
       "email": "support@transmitly.io"
@@ -1284,6 +1284,70 @@
               "paused",
               "quarantined"
             ]
+          }
+        }
+      },
+      "DMARCSource": {
+        "type": "object",
+        "properties": {
+          "source_ip": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer"
+          },
+          "dkim_pass": {
+            "type": "integer"
+          },
+          "spf_pass": {
+            "type": "integer"
+          },
+          "disposition": {
+            "type": "string"
+          }
+        }
+      },
+      "DMARCSummary": {
+        "type": "object",
+        "properties": {
+          "domain_id": {
+            "type": "string"
+          },
+          "reports": {
+            "type": "integer"
+          },
+          "messages": {
+            "type": "integer"
+          },
+          "dkim_pass": {
+            "type": "integer"
+          },
+          "spf_pass": {
+            "type": "integer"
+          },
+          "quarantined": {
+            "type": "integer"
+          },
+          "rejected": {
+            "type": "integer"
+          },
+          "last_report_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DMARCSource"
+            }
+          },
+          "recent": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
           }
         }
       }
@@ -3024,6 +3088,38 @@
         "responses": {
           "200": {
             "description": "Updated IP"
+          }
+        }
+      }
+    },
+    "/v1/domains/{id}/dmarc": {
+      "get": {
+        "summary": "Summarise DMARC aggregate reports for a domain",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "DMARC aggregate summary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "summary": {
+                      "$ref": "#/components/schemas/DMARCSummary"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
