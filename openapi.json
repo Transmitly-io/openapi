@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Transmitly API",
-    "version": "1.7.0",
+    "version": "1.8.0",
     "description": "Durable email acceptance, delivery events and inbound routing. Acceptance (202) means committed to Postgres; delivered_to_mx means the remote MX accepted the message, not inbox placement.",
     "contact": {
       "email": "support@transmitly.io"
@@ -894,6 +894,107 @@
           },
           "error": {
             "type": "string"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "SendingIP": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "node_id": {
+            "type": "string"
+          },
+          "pool_id": {
+            "type": "string"
+          },
+          "ip": {
+            "type": "string"
+          },
+          "hostname": {
+            "type": "string"
+          },
+          "expected_ptr": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "ptr_verified": {
+            "type": "boolean"
+          },
+          "spf_verified": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "warming",
+              "paused",
+              "quarantined"
+            ]
+          },
+          "last_checked_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "checks": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "reputation": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "MTANode": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "hostname": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "endpoint": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "degraded",
+              "unreachable",
+              "unknown",
+              "disabled"
+            ]
+          },
+          "ips": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SendingIP"
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
           },
           "updated_at": {
             "type": "string",
@@ -2428,6 +2529,46 @@
         "responses": {
           "200": {
             "description": "Cancelled"
+          }
+        }
+      }
+    },
+    "/v1/mta/nodes": {
+      "get": {
+        "summary": "List MTA nodes, sending IPs and live health checks",
+        "responses": {
+          "200": {
+            "description": "Node inventory with PTR, SPF and heartbeat checks",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "nodes": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/MTANode"
+                      }
+                    },
+                    "checks": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "heartbeats": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "checked_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
