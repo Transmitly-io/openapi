@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Transmitly API",
-    "version": "1.13.0",
+    "version": "1.14.0",
     "description": "Durable email acceptance, delivery events and inbound routing. Acceptance (202) means committed to Postgres; delivered_to_mx means the remote MX accepted the message, not inbox placement.",
     "contact": {
       "email": "support@transmitly.io"
@@ -1479,6 +1479,42 @@
             "nullable": true
           }
         }
+      },
+      "BroadcastAnalytics": {
+        "type": "object",
+        "properties": {
+          "recipients": {
+            "type": "integer"
+          },
+          "queued": {
+            "type": "integer"
+          },
+          "skipped": {
+            "type": "integer"
+          },
+          "failed": {
+            "type": "integer"
+          },
+          "delivered": {
+            "type": "integer"
+          },
+          "bounced": {
+            "type": "integer"
+          },
+          "complained": {
+            "type": "integer"
+          },
+          "in_flight": {
+            "type": "integer"
+          },
+          "providers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
       }
     },
     "responses": {
@@ -2873,7 +2909,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Broadcast and recipients",
+            "description": "Broadcast, recipients and delivery analytics",
             "content": {
               "application/json": {
                 "schema": {
@@ -2887,6 +2923,9 @@
                       "items": {
                         "$ref": "#/components/schemas/BroadcastRecipient"
                       }
+                    },
+                    "analytics": {
+                      "$ref": "#/components/schemas/BroadcastAnalytics"
                     }
                   }
                 }
