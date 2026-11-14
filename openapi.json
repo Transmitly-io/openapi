@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Transmitly API",
-    "version": "1.12.0",
+    "version": "1.13.0",
     "description": "Durable email acceptance, delivery events and inbound routing. Acceptance (202) means committed to Postgres; delivered_to_mx means the remote MX accepted the message, not inbox placement.",
     "contact": {
       "email": "support@transmitly.io"
@@ -1377,6 +1377,106 @@
           },
           "rejected": {
             "type": "integer"
+          }
+        }
+      },
+      "DedicatedEligibility": {
+        "type": "object",
+        "properties": {
+          "eligible": {
+            "type": "boolean"
+          },
+          "reasons": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "plan": {
+            "type": "string"
+          },
+          "plan_name": {
+            "type": "string"
+          },
+          "allowance": {
+            "type": "integer"
+          },
+          "assignments": {
+            "type": "integer"
+          },
+          "available_ips": {
+            "type": "integer"
+          },
+          "monthly_volume": {
+            "type": "integer"
+          },
+          "minimum_volume": {
+            "type": "integer"
+          },
+          "org_age_days": {
+            "type": "integer"
+          },
+          "minimum_age_days": {
+            "type": "integer"
+          },
+          "bounce_rate": {
+            "type": "number"
+          },
+          "complaint_rate": {
+            "type": "number"
+          },
+          "active_domains": {
+            "type": "integer"
+          },
+          "pending_request": {
+            "type": "boolean"
+          },
+          "billing_configured": {
+            "type": "boolean"
+          },
+          "subscription_ready": {
+            "type": "boolean"
+          }
+        }
+      },
+      "DedicatedIPRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "org_id": {
+            "type": "string"
+          },
+          "org_name": {
+            "type": "string"
+          },
+          "stream": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "approved",
+              "rejected",
+              "cancelled"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          },
+          "assignment_id": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reviewed_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           }
         }
       }
@@ -3149,6 +3249,112 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/v1/dedicated-ips": {
+      "get": {
+        "summary": "Get dedicated IP eligibility, assignments and request history",
+        "responses": {
+          "200": {
+            "description": "Dedicated IP state"
+          }
+        }
+      }
+    },
+    "/v1/dedicated-ips/requests": {
+      "post": {
+        "summary": "Request a dedicated IP",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "stream": {
+                    "type": "string",
+                    "enum": [
+                      "transactional",
+                      "marketing"
+                    ]
+                  },
+                  "reason": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Requested"
+          },
+          "403": {
+            "description": "Not eligible"
+          }
+        }
+      }
+    },
+    "/v1/admin/dedicated-ip-requests": {
+      "get": {
+        "summary": "List dedicated IP requests (platform admin)",
+        "parameters": [
+          {
+            "name": "pending",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Requests"
+          }
+        }
+      }
+    },
+    "/v1/admin/dedicated-ip-requests/{id}/decision": {
+      "post": {
+        "summary": "Approve or reject a dedicated IP request (platform admin)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "decision": {
+                    "type": "string",
+                    "enum": [
+                      "approved",
+                      "rejected"
+                    ]
+                  },
+                  "reason": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Decision recorded"
           }
         }
       }
