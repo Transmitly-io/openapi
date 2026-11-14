@@ -1348,6 +1348,35 @@
               "type": "object",
               "additionalProperties": true
             }
+          },
+          "trends": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DMARCDay"
+            }
+          }
+        }
+      },
+      "DMARCDay": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string"
+          },
+          "messages": {
+            "type": "integer"
+          },
+          "dkim_pass": {
+            "type": "integer"
+          },
+          "spf_pass": {
+            "type": "integer"
+          },
+          "quarantined": {
+            "type": "integer"
+          },
+          "rejected": {
+            "type": "integer"
           }
         }
       }
