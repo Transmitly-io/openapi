@@ -226,6 +226,15 @@
           "created_at": {
             "type": "string",
             "format": "date-time"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "api",
+              "inbound_forward",
+              "inbound_relay",
+              "inbox_reply"
+            ]
           }
         }
       },
@@ -804,6 +813,13 @@
             "in": "query",
             "schema": {
               "type": "integer"
+            }
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           }
         ],
