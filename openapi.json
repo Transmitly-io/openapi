@@ -1,0 +1,1532 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Transmitly API",
+    "version": "1.4.0",
+    "description": "Durable email acceptance, delivery events and inbound routing. Acceptance (202) means committed to Postgres; delivered_to_mx means the remote MX accepted the message, not inbox placement.",
+    "contact": {
+      "email": "support@transmitly.io"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://transmitly.io"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "API key, e.g. txk_..."
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "details": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ]
+          }
+        }
+      },
+      "EmailRequest": {
+        "type": "object",
+        "required": [
+          "from",
+          "to",
+          "subject"
+        ],
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "Display name optional, e.g. 'Notify <notify@mail.acme.com>'. Domain must be verified."
+          },
+          "to": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 50
+              }
+            ]
+          },
+          "reply_to": {
+            "type": "string",
+            "maxLength": 320,
+            "description": "Optional Reply-To address, display name allowed. Takes precedence over a Reply-To header. Must be a valid email address."
+          },
+          "subject": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "html": {
+            "type": "string",
+            "maxLength": 1048576
+          },
+          "text": {
+            "type": "string"
+          },
+          "stream": {
+            "type": "string",
+            "enum": [
+              "transactional",
+              "marketing"
+            ],
+            "default": "transactional"
+          },
+          "tags": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "headers": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Additional headers. From, To, Subject, Date, Message-ID and Reply-To are managed by the API."
+          }
+        }
+      },
+      "EmailAccepted": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "const": "accepted"
+          },
+          "recipients": {
+            "type": "integer"
+          },
+          "warning": {
+            "type": "string"
+          }
+        }
+      },
+      "Delivery": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "recipient": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "sending",
+              "delivered",
+              "deferred",
+              "bounced",
+              "complained",
+              "suppressed",
+              "failed",
+              "cancelled"
+            ]
+          },
+          "attempts": {
+            "type": "integer"
+          },
+          "provider_id": {
+            "type": "string"
+          },
+          "mx_host": {
+            "type": "string"
+          },
+          "smtp_code": {
+            "type": "integer"
+          },
+          "enhanced_code": {
+            "type": "string"
+          },
+          "last_error": {
+            "type": "string"
+          },
+          "delivered_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "Message": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "stream": {
+            "type": "string"
+          },
+          "from": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "recipient_count": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Suppression": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "InboundRoute": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "org_id": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "forward",
+              "relay",
+              "webhook",
+              "drop"
+            ]
+          },
+          "destination": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "InboundRouteInput": {
+        "type": "object",
+        "required": [
+          "address",
+          "action"
+        ],
+        "properties": {
+          "address": {
+            "type": "string",
+            "description": "Full address or @domain catch-all"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "forward",
+              "relay",
+              "webhook",
+              "drop"
+            ]
+          },
+          "destination": {
+            "type": "string",
+            "description": "Required for forward and relay"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      },
+      "Webhook": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "type": "string"
+          },
+          "domain_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "status": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "WebhookInput": {
+        "type": "object",
+        "required": [
+          "url",
+          "events"
+        ],
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "type": "string"
+          },
+          "domain_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Empty means all domains"
+          }
+        }
+      },
+      "SuppressionInput": {
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "unsubscribe",
+              "complaint",
+              "hard_bounce",
+              "invalid"
+            ]
+          },
+          "stream": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      },
+      "Inbox": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "org_id": {
+            "type": "string"
+          },
+          "domain_id": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "from_name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "disabled"
+            ]
+          },
+          "threads": {
+            "type": "integer"
+          },
+          "unread": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "InboxInput": {
+        "type": "object",
+        "required": [
+          "address"
+        ],
+        "properties": {
+          "address": {
+            "type": "string",
+            "description": "Address on a verified workspace domain"
+          },
+          "name": {
+            "type": "string"
+          },
+          "from_name": {
+            "type": "string"
+          }
+        }
+      },
+      "InboxThread": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "inbox_id": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "participants": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "last_message_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "unread_count": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "archived"
+            ]
+          },
+          "last_from": {
+            "type": "string"
+          },
+          "last_preview": {
+            "type": "string"
+          },
+          "assignee_id": {
+            "type": "string"
+          },
+          "assignee_name": {
+            "type": "string"
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "last_direction": {
+            "type": "string"
+          }
+        }
+      },
+      "InboxMessage": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "thread_id": {
+            "type": "string"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "inbound",
+              "outbound"
+            ]
+          },
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "message_id": {
+            "type": "string"
+          },
+          "in_reply_to": {
+            "type": "string"
+          },
+          "references": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "html": {
+            "type": "string"
+          },
+          "delivery_status": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "filename": {
+                  "type": "string"
+                },
+                "content_type": {
+                  "type": "string"
+                },
+                "size_bytes": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "InboxReplyInput": {
+        "type": "object",
+        "properties": {
+          "html": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "from_name": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "responses": {
+      "Error": {
+        "description": "Error envelope",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/v1/health": {
+      "get": {
+        "summary": "Service health",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Component status"
+          }
+        }
+      }
+    },
+    "/v1/emails": {
+      "post": {
+        "summary": "Accept an email",
+        "description": "Durably accepts a message. Returns 202 only after the message, deliveries, idempotency key and outbox event commit.",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 255
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailAccepted"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/emails/{id}": {
+      "get": {
+        "summary": "Get a message with deliveries",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Message",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "$ref": "#/components/schemas/Message"
+                    },
+                    "deliveries": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Delivery"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/messages": {
+      "get": {
+        "summary": "List messages",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "stream",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "maximum": 200
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Message list"
+          }
+        }
+      }
+    },
+    "/v1/domains": {
+      "get": {
+        "summary": "List sending domains and the DNS records to publish",
+        "responses": {
+          "200": {
+            "description": "Domains with DNS instructions and plan limits"
+          }
+        }
+      },
+      "post": {
+        "summary": "Add a sending domain",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "domain"
+                ],
+                "properties": {
+                  "domain": {
+                    "type": "string",
+                    "example": "mail.acme.com"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Domain created with DKIM key and DNS records"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/domains/{id}/verify": {
+      "post": {
+        "summary": "Verify DNS authentication",
+        "description": "Checks ownership TXT, SPF, DKIM and DMARC. ACTIVE requires ownership plus aligned SPF and DKIM.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Verification report"
+          }
+        }
+      }
+    },
+    "/v1/suppressions": {
+      "get": {
+        "summary": "List suppressions",
+        "responses": {
+          "200": {
+            "description": "Suppressions"
+          }
+        }
+      },
+      "post": {
+        "summary": "Add a suppression",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "enum": [
+                      "manual",
+                      "unsubscribe",
+                      "complaint",
+                      "hard_bounce",
+                      "invalid"
+                    ]
+                  },
+                  "stream": {
+                    "type": "string"
+                  },
+                  "note": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Suppression created"
+          }
+        }
+      }
+    },
+    "/v1/webhooks": {
+      "get": {
+        "summary": "List webhook endpoints",
+        "responses": {
+          "200": {
+            "description": "Endpoints with domain scope"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a webhook endpoint",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "url",
+                  "events"
+                ],
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "events": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "domain_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Empty means all domains"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Endpoint and signing secret"
+          }
+        }
+      }
+    },
+    "/v1/usage": {
+      "get": {
+        "summary": "Usage ledger and plan limits",
+        "responses": {
+          "200": {
+            "description": "Daily usage plus plan limits"
+          }
+        }
+      }
+    },
+    "/v1/events": {
+      "get": {
+        "summary": "Recent SMTP events",
+        "responses": {
+          "200": {
+            "description": "Normalised attempts"
+          }
+        }
+      }
+    },
+    "/v1/messages/{id}/deliveries": {
+      "get": {
+        "summary": "List deliveries for a message",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deliveries",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "deliveries": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Delivery"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/suppressions/{id}": {
+      "delete": {
+        "summary": "Delete a suppression",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/webhooks/{id}": {
+      "patch": {
+        "summary": "Update a webhook endpoint",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebhookInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated webhook"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a webhook endpoint",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/webhooks/attempts": {
+      "get": {
+        "summary": "Recent webhook delivery attempts",
+        "responses": {
+          "200": {
+            "description": "Attempts with status and response codes"
+          }
+        }
+      }
+    },
+    "/v1/inbound/routes": {
+      "get": {
+        "summary": "List inbound routes",
+        "responses": {
+          "200": {
+            "description": "Routes plus the workspace receiving domains",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "routes": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/InboundRoute"
+                      }
+                    },
+                    "mail_domains": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "bounce_domain": {
+                      "type": "string"
+                    },
+                    "fbl_domain": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create an inbound route",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InboundRouteInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Route created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "route": {
+                      "$ref": "#/components/schemas/InboundRoute"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/inbound/routes/{id}": {
+      "patch": {
+        "summary": "Update an inbound route action or destination",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InboundRouteInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated route",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "route": {
+                      "$ref": "#/components/schemas/InboundRoute"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete an inbound route",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/inboxes": {
+      "get": {
+        "summary": "List inboxes",
+        "responses": {
+          "200": {
+            "description": "Inboxes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "inboxes": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Inbox"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create an inbox",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InboxInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "inbox": {
+                      "$ref": "#/components/schemas/Inbox"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/inboxes/{id}": {
+      "get": {
+        "summary": "Get an inbox and its threads",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Search subject, participants, labels and message text"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Inbox and threads",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "inbox": {
+                      "$ref": "#/components/schemas/Inbox"
+                    },
+                    "threads": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/InboxThread"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete an inbox",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted"
+          }
+        }
+      }
+    },
+    "/v1/inboxes/{id}/threads/{thread}": {
+      "get": {
+        "summary": "Get a thread and its messages",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "thread",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thread",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "inbox": {
+                      "$ref": "#/components/schemas/Inbox"
+                    },
+                    "thread": {
+                      "$ref": "#/components/schemas/InboxThread"
+                    },
+                    "messages": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/InboxMessage"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Mark a thread read",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "thread",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "read": {
+                    "type": "boolean"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "open",
+                      "archived"
+                    ]
+                  },
+                  "assignee_id": {
+                    "type": "string",
+                    "description": "Member id; empty string unassigns"
+                  },
+                  "labels": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated"
+          }
+        }
+      }
+    },
+    "/v1/inboxes/{id}/threads/{thread}/reply": {
+      "post": {
+        "summary": "Reply inside an inbox thread",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "thread",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InboxReplyInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Reply accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "$ref": "#/components/schemas/InboxMessage"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/v1/inboxes/{id}/messages/{message}/attachments/{attachment}": {
+      "get": {
+        "summary": "Download an inbox attachment",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "message",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "attachment",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Attachment content"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    }
+  }
+}
