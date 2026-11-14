@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Transmitly API",
-    "version": "1.8.0",
+    "version": "1.9.0",
     "description": "Durable email acceptance, delivery events and inbound routing. Acceptance (202) means committed to Postgres; delivered_to_mx means the remote MX accepted the message, not inbox placement.",
     "contact": {
       "email": "support@transmitly.io"
@@ -999,6 +999,125 @@
           "updated_at": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "DedicatedAssignment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "sending_ip_id": {
+            "type": "string"
+          },
+          "ip": {
+            "type": "string"
+          },
+          "hostname": {
+            "type": "string"
+          },
+          "node_id": {
+            "type": "string"
+          },
+          "node_name": {
+            "type": "string"
+          },
+          "endpoint": {
+            "type": "string"
+          },
+          "source_name": {
+            "type": "string"
+          },
+          "org_id": {
+            "type": "string"
+          },
+          "org_name": {
+            "type": "string"
+          },
+          "stream": {
+            "type": "string",
+            "enum": [
+              "transactional",
+              "marketing"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "warming",
+              "active",
+              "paused",
+              "released"
+            ]
+          },
+          "warmup_started_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "warmup_days": {
+            "type": "integer"
+          },
+          "warmup_day": {
+            "type": "integer"
+          },
+          "daily_limit": {
+            "type": "integer"
+          },
+          "sent_today": {
+            "type": "integer"
+          },
+          "last_reset": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "assigned_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "released_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "sent_24h": {
+            "type": "integer"
+          },
+          "delivered_24h": {
+            "type": "integer"
+          },
+          "bounced_24h": {
+            "type": "integer"
+          },
+          "complained_24h": {
+            "type": "integer"
+          }
+        }
+      },
+      "DedicatedAssignmentInput": {
+        "type": "object",
+        "required": [
+          "sending_ip_id"
+        ],
+        "properties": {
+          "sending_ip_id": {
+            "type": "string"
+          },
+          "stream": {
+            "type": "string",
+            "enum": [
+              "transactional",
+              "marketing"
+            ]
+          },
+          "warmup_days": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 30
           }
         }
       }
@@ -2535,7 +2654,7 @@
     },
     "/v1/mta/nodes": {
       "get": {
-        "summary": "List MTA nodes, sending IPs and live health checks",
+        "summary": "List MTA nodes, sending IPs and live health checks (platform admin)",
         "responses": {
           "200": {
             "description": "Node inventory with PTR, SPF and heartbeat checks",
@@ -2569,6 +2688,87 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/v1/mta/assignments": {
+      "get": {
+        "summary": "List dedicated sending-IP assignments for this workspace (platform admin)",
+        "responses": {
+          "200": {
+            "description": "Assignments",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "assignments": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/DedicatedAssignment"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Assign a dedicated sending IP (platform admin)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DedicatedAssignmentInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Assigned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "assignment": {
+                      "$ref": "#/components/schemas/DedicatedAssignment"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Plan limit"
+          },
+          "409": {
+            "description": "IP already assigned"
+          }
+        }
+      }
+    },
+    "/v1/mta/assignments/{id}": {
+      "delete": {
+        "summary": "Release a dedicated sending IP (platform admin)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Released"
           }
         }
       }
