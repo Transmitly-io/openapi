@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Transmitly API",
-    "version": "1.17.0",
+    "version": "1.18.0",
     "description": "Durable email acceptance, delivery events and inbound routing. Acceptance (202) means committed to Postgres; delivered_to_mx means the remote MX accepted the message, not inbox placement.",
     "contact": {
       "email": "support@transmitly.io"
@@ -833,6 +833,20 @@
           },
           "track_clicks": {
             "type": "boolean"
+          },
+          "variant_b_subject": {
+            "type": "string"
+          },
+          "variant_b_html": {
+            "type": "string"
+          },
+          "variant_b_text": {
+            "type": "string"
+          },
+          "variant_split_percent": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 99
           }
         }
       },
@@ -873,6 +887,22 @@
           },
           "track_clicks": {
             "type": "boolean"
+          },
+          "variant_b_subject": {
+            "type": "string",
+            "description": "Optional B variant subject; empty falls back to A"
+          },
+          "variant_b_html": {
+            "type": "string"
+          },
+          "variant_b_text": {
+            "type": "string"
+          },
+          "variant_split_percent": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 99,
+            "default": 50
           }
         }
       },
@@ -910,6 +940,13 @@
           "updated_at": {
             "type": "string",
             "format": "date-time"
+          },
+          "variant": {
+            "type": "string",
+            "enum": [
+              "a",
+              "b"
+            ]
           }
         }
       },
@@ -1543,6 +1580,12 @@
           },
           "unique_clicks": {
             "type": "integer"
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BroadcastVariantAnalytics"
+            }
           }
         }
       },
@@ -1585,6 +1628,39 @@
             "type": "string",
             "format": "date-time",
             "nullable": true
+          }
+        }
+      },
+      "BroadcastVariantAnalytics": {
+        "type": "object",
+        "properties": {
+          "variant": {
+            "type": "string",
+            "enum": [
+              "a",
+              "b"
+            ]
+          },
+          "recipients": {
+            "type": "integer"
+          },
+          "delivered": {
+            "type": "integer"
+          },
+          "bounced": {
+            "type": "integer"
+          },
+          "opens": {
+            "type": "integer"
+          },
+          "unique_opens": {
+            "type": "integer"
+          },
+          "clicks": {
+            "type": "integer"
+          },
+          "unique_clicks": {
+            "type": "integer"
           }
         }
       }
@@ -3493,6 +3569,14 @@
                   "to": {
                     "type": "string",
                     "format": "email"
+                  },
+                  "variant": {
+                    "type": "string",
+                    "enum": [
+                      "a",
+                      "b"
+                    ],
+                    "default": "a"
                   }
                 }
               }
