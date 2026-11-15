@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Transmitly API",
-    "version": "1.19.0",
+    "version": "1.20.0",
     "description": "Durable email acceptance, delivery events and inbound routing. Acceptance (202) means committed to Postgres; delivered_to_mx means the remote MX accepted the message, not inbox placement.",
     "contact": {
       "email": "support@transmitly.io"
@@ -876,6 +876,15 @@
             "type": "string",
             "format": "date-time",
             "nullable": true
+          },
+          "segment_id": {
+            "type": "string"
+          },
+          "segment_name": {
+            "type": "string"
+          },
+          "topic": {
+            "type": "string"
           }
         }
       },
@@ -956,6 +965,14 @@
             "minimum": 5,
             "maximum": 50,
             "default": 20
+          },
+          "segment_id": {
+            "type": "string",
+            "description": "Target a saved segment; overrides audience_id"
+          },
+          "topic": {
+            "type": "string",
+            "description": "Optional preference topic; contacts opted out of it are excluded"
           }
         }
       },
@@ -1728,6 +1745,120 @@
           },
           "unique_clicks": {
             "type": "integer"
+          }
+        }
+      },
+      "SegmentFilters": {
+        "type": "object",
+        "properties": {
+          "attributes": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "source": {
+            "type": "string"
+          },
+          "opened_within_days": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 365
+          },
+          "clicked_within_days": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 365
+          },
+          "include_unsubscribed": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Segment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "org_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "audience_id": {
+            "type": "string"
+          },
+          "audience_name": {
+            "type": "string"
+          },
+          "filters": {
+            "$ref": "#/components/schemas/SegmentFilters"
+          },
+          "contacts": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "SegmentInput": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "audience_id": {
+            "type": "string"
+          },
+          "filters": {
+            "$ref": "#/components/schemas/SegmentFilters"
+          }
+        }
+      },
+      "ContactTopic": {
+        "type": "object",
+        "properties": {
+          "topic": {
+            "type": "string"
+          },
+          "subscribed": {
+            "type": "boolean"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "PreferenceUpdate": {
+        "type": "object",
+        "properties": {
+          "unsubscribed": {
+            "type": "boolean"
+          },
+          "topics": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "boolean"
+            }
           }
         }
       }
@@ -3701,6 +3832,141 @@
         "responses": {
           "302": {
             "description": "Redirect"
+          }
+        }
+      }
+    },
+    "/v1/segments": {
+      "get": {
+        "summary": "List saved contact segments",
+        "responses": {
+          "200": {
+            "description": "Segments",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "segments": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Segment"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a saved contact segment",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SegmentInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        }
+      }
+    },
+    "/v1/segments/{id}": {
+      "get": {
+        "summary": "Read a segment and preview its contacts",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Segment"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a segment",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted"
+          }
+        }
+      }
+    },
+    "/v1/marketing/preferences": {
+      "get": {
+        "summary": "Read contact preferences from a signed link",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Preferences"
+          }
+        }
+      },
+      "post": {
+        "summary": "Update contact preferences or perform one-click unsubscribe",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreferenceUpdate"
+              }
+            },
+            "text/plain": {
+              "schema": {
+                "type": "string",
+                "example": "List-Unsubscribe=One-Click"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Saved"
           }
         }
       }
