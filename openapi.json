@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Transmitly API",
-    "version": "1.39.0",
+    "version": "1.40.0",
     "description": "Durable email acceptance, delivery events and inbound routing. Acceptance (202) means committed to Postgres; delivered_to_mx means the remote MX accepted the message, not inbox placement.",
     "contact": {
       "email": "support@transmitly.io"
@@ -2274,6 +2274,31 @@
             "type": "string"
           },
           "payload": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ConsentEvent": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "actor": {
+            "type": "string"
+          },
+          "detail": {
             "type": "object",
             "additionalProperties": true
           },
@@ -5107,6 +5132,41 @@
         "responses": {
           "200": {
             "description": "Deleted"
+          }
+        }
+      }
+    },
+    "/v1/contacts/{id}/consent": {
+      "get": {
+        "summary": "Read a contact consent history",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Consent events",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "consent": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ConsentEvent"
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
