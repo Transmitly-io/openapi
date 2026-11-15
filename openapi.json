@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Transmitly API",
-    "version": "1.42.0",
+    "version": "1.43.0",
     "description": "Durable email acceptance, delivery events and inbound routing. Acceptance (202) means committed to Postgres; delivered_to_mx means the remote MX accepted the message, not inbox placement.",
     "contact": {
       "email": "support@transmitly.io"
@@ -4958,6 +4958,9 @@
                   "properties": {
                     "notify_assignments": {
                       "type": "boolean"
+                    },
+                    "notify_digest": {
+                      "type": "boolean"
                     }
                   }
                 }
@@ -4977,6 +4980,9 @@
                 "properties": {
                   "notify_assignments": {
                     "type": "boolean"
+                  },
+                  "notify_digest": {
+                    "type": "boolean"
                   }
                 }
               }
@@ -4985,7 +4991,22 @@
         },
         "responses": {
           "200": {
-            "description": "Updated"
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "notify_assignments": {
+                      "type": "boolean"
+                    },
+                    "notify_digest": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
