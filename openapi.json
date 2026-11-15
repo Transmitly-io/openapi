@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Transmitly API",
-    "version": "1.26.0",
+    "version": "1.27.0",
     "description": "Durable email acceptance, delivery events and inbound routing. Acceptance (202) means committed to Postgres; delivered_to_mx means the remote MX accepted the message, not inbox placement.",
     "contact": {
       "email": "support@transmitly.io"
@@ -2101,6 +2101,52 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 365
+          }
+        }
+      },
+      "TestModeSimulation": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "test_mode": {
+            "type": "boolean"
+          },
+          "domain": {
+            "type": "string"
+          },
+          "domain_status": {
+            "type": "string"
+          },
+          "would_send": {
+            "type": "integer"
+          },
+          "would_suppress": {
+            "type": "integer"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recipients": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "type": "string"
+                },
+                "suppressed": {
+                  "type": "boolean"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       }
@@ -4475,6 +4521,65 @@
         "responses": {
           "200": {
             "description": "Updated"
+          }
+        }
+      }
+    },
+    "/v1/test-mode/simulate": {
+      "post": {
+        "summary": "Validate a message without accepting or sending it",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "from",
+                  "to",
+                  "subject"
+                ],
+                "properties": {
+                  "from": {
+                    "type": "string"
+                  },
+                  "to": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "subject": {
+                    "type": "string"
+                  },
+                  "html": {
+                    "type": "string"
+                  },
+                  "text": {
+                    "type": "string"
+                  },
+                  "stream": {
+                    "type": "string",
+                    "enum": [
+                      "transactional",
+                      "marketing"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Simulation result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestModeSimulation"
+                }
+              }
+            }
           }
         }
       }
