@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Transmitly API",
-    "version": "1.20.0",
+    "version": "1.21.0",
     "description": "Durable email acceptance, delivery events and inbound routing. Acceptance (202) means committed to Postgres; delivered_to_mx means the remote MX accepted the message, not inbox placement.",
     "contact": {
       "email": "support@transmitly.io"
@@ -673,6 +673,12 @@
           "created_at": {
             "type": "string",
             "format": "date-time"
+          },
+          "double_opt_in": {
+            "type": "boolean"
+          },
+          "confirmation_from": {
+            "type": "string"
           }
         }
       },
@@ -723,6 +729,23 @@
           "updated_at": {
             "type": "string",
             "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "active"
+            ]
+          },
+          "confirmed_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "confirmation_sent_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           }
         }
       },
@@ -1859,6 +1882,27 @@
             "additionalProperties": {
               "type": "boolean"
             }
+          }
+        }
+      },
+      "AudienceUpdate": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "double_opt_in": {
+            "type": "boolean"
+          },
+          "confirmation_from": {
+            "type": "string",
+            "description": "Verified sender for the confirmation email"
           }
         }
       }
@@ -3014,6 +3058,34 @@
             "description": "Deleted"
           }
         }
+      },
+      "patch": {
+        "summary": "Update audience settings",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AudienceUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated"
+          }
+        }
       }
     },
     "/v1/contacts": {
@@ -3967,6 +4039,46 @@
         "responses": {
           "200": {
             "description": "Saved"
+          }
+        }
+      }
+    },
+    "/v1/contacts/{id}/confirm": {
+      "post": {
+        "summary": "Queue a double opt-in confirmation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Queued"
+          }
+        }
+      }
+    },
+    "/v1/marketing/confirm": {
+      "get": {
+        "summary": "Confirm a double opt-in contact",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Confirmed"
           }
         }
       }
