@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Transmitly API",
-    "version": "1.40.0",
+    "version": "1.41.0",
     "description": "Durable email acceptance, delivery events and inbound routing. Acceptance (202) means committed to Postgres; delivered_to_mx means the remote MX accepted the message, not inbox placement.",
     "contact": {
       "email": "support@transmitly.io"
@@ -2305,6 +2305,43 @@
           "created_at": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "TopicStat": {
+        "type": "object",
+        "properties": {
+          "topic": {
+            "type": "string"
+          },
+          "subscribed": {
+            "type": "integer"
+          },
+          "unsubscribed": {
+            "type": "integer"
+          }
+        }
+      },
+      "ContactStats": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer"
+          },
+          "active": {
+            "type": "integer"
+          },
+          "pending": {
+            "type": "integer"
+          },
+          "unsubscribed": {
+            "type": "integer"
+          },
+          "topics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TopicStat"
+            }
           }
         }
       }
@@ -5164,6 +5201,45 @@
                       }
                     }
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/contacts/stats": {
+      "get": {
+        "summary": "Read contact and topic preference stats",
+        "responses": {
+          "200": {
+            "description": "Stats",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stats": {
+                      "$ref": "#/components/schemas/ContactStats"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/contacts/consent/export": {
+      "get": {
+        "summary": "Export consent events as CSV",
+        "responses": {
+          "200": {
+            "description": "CSV export",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string"
                 }
               }
             }
