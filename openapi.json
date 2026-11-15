@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Transmitly API",
-    "version": "1.15.0",
+    "version": "1.16.0",
     "description": "Durable email acceptance, delivery events and inbound routing. Acceptance (202) means committed to Postgres; delivered_to_mx means the remote MX accepted the message, not inbox placement.",
     "contact": {
       "email": "support@transmitly.io"
@@ -1354,6 +1354,12 @@
             "items": {
               "$ref": "#/components/schemas/DMARCDay"
             }
+          },
+          "source_details": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DMARCSourceDetail"
+            }
           }
         }
       },
@@ -1513,6 +1519,48 @@
               "type": "object",
               "additionalProperties": true
             }
+          }
+        }
+      },
+      "DMARCSourceDetail": {
+        "type": "object",
+        "properties": {
+          "source_ip": {
+            "type": "string"
+          },
+          "dkim_domain": {
+            "type": "string"
+          },
+          "spf_domain": {
+            "type": "string"
+          },
+          "header_from": {
+            "type": "string"
+          },
+          "envelope_from": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer"
+          },
+          "dkim_pass": {
+            "type": "integer"
+          },
+          "spf_pass": {
+            "type": "integer"
+          },
+          "disposition": {
+            "type": "string"
+          },
+          "first_seen": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "last_seen": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           }
         }
       }
