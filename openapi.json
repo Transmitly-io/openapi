@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Transmitly API",
-    "version": "1.16.0",
+    "version": "1.17.0",
     "description": "Durable email acceptance, delivery events and inbound routing. Acceptance (202) means committed to Postgres; delivered_to_mx means the remote MX accepted the message, not inbox placement.",
     "contact": {
       "email": "support@transmitly.io"
@@ -827,6 +827,12 @@
           },
           "failed": {
             "type": "integer"
+          },
+          "track_opens": {
+            "type": "boolean"
+          },
+          "track_clicks": {
+            "type": "boolean"
           }
         }
       },
@@ -861,6 +867,12 @@
           },
           "text": {
             "type": "string"
+          },
+          "track_opens": {
+            "type": "boolean"
+          },
+          "track_clicks": {
+            "type": "boolean"
           }
         }
       },
@@ -1519,6 +1531,18 @@
               "type": "object",
               "additionalProperties": true
             }
+          },
+          "opens": {
+            "type": "integer"
+          },
+          "unique_opens": {
+            "type": "integer"
+          },
+          "clicks": {
+            "type": "integer"
+          },
+          "unique_clicks": {
+            "type": "integer"
           }
         }
       },
@@ -3478,6 +3502,54 @@
         "responses": {
           "202": {
             "description": "Test accepted"
+          }
+        }
+      }
+    },
+    "/t/o/{token}": {
+      "get": {
+        "summary": "Record a broadcast open and return a 1x1 pixel",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "GIF pixel"
+          }
+        }
+      }
+    },
+    "/t/c/{token}": {
+      "get": {
+        "summary": "Record a tracked click and redirect",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "u",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirect"
           }
         }
       }
