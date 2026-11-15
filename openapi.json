@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Transmitly API",
-    "version": "1.33.0",
+    "version": "1.34.0",
     "description": "Durable email acceptance, delivery events and inbound routing. Acceptance (202) means committed to Postgres; delivered_to_mx means the remote MX accepted the message, not inbox placement.",
     "contact": {
       "email": "support@transmitly.io"
@@ -379,6 +379,9 @@
             "type": "string"
           },
           "avg_latency_ms": {
+            "type": "integer"
+          },
+          "latency_alert_ms": {
             "type": "integer"
           }
         }
@@ -2212,6 +2215,24 @@
           "created_at": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "WebhookLatencyPoint": {
+        "type": "object",
+        "properties": {
+          "bucket": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "delivered": {
+            "type": "integer"
+          },
+          "avg_ms": {
+            "type": "integer"
+          },
+          "max_ms": {
+            "type": "integer"
           }
         }
       }
@@ -4700,6 +4721,86 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "Updated"
+          }
+        }
+      }
+    },
+    "/v1/webhooks/latency": {
+      "get": {
+        "summary": "Hourly delivered webhook latency",
+        "parameters": [
+          {
+            "name": "endpoint",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "hours",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 168
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Latency points",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "points": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/WebhookLatencyPoint"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/webhooks/{id}/latency": {
+      "post": {
+        "summary": "Set a slow-endpoint alert threshold",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "latency_alert_ms": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 300000
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Updated"
