@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Transmitly API",
-    "version": "1.49.0",
+    "version": "1.50.0",
     "description": "Durable email acceptance, delivery events and inbound routing. Acceptance (202) means committed to Postgres; delivered_to_mx means the remote MX accepted the message, not inbox placement.",
     "contact": {
       "email": "support@transmitly.io"
@@ -5578,6 +5578,30 @@
       }
     },
     "/v1/assets": {
+      "get": {
+        "summary": "List compose assets with usage state",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Assets and total"
+          }
+        }
+      },
       "post": {
         "summary": "Upload an image for the block builder",
         "requestBody": {
@@ -5629,6 +5653,27 @@
         "responses": {
           "200": {
             "description": "Image bytes"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete an unused compose asset",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted"
+          },
+          "409": {
+            "description": "Asset is referenced or recently used"
           }
         }
       }
