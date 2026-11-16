@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Transmitly API",
-    "version": "1.44.0",
+    "version": "1.45.0",
     "description": "Durable email acceptance, delivery events and inbound routing. Acceptance (202) means committed to Postgres; delivered_to_mx means the remote MX accepted the message, not inbox placement.",
     "contact": {
       "email": "support@transmitly.io"
@@ -5366,6 +5366,92 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/v1/dashboard/emails": {
+      "post": {
+        "summary": "Send an email from the dashboard session",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "from",
+                  "to",
+                  "subject"
+                ],
+                "properties": {
+                  "from": {
+                    "type": "string"
+                  },
+                  "to": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "cc": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "bcc": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "subject": {
+                    "type": "string"
+                  },
+                  "html": {
+                    "type": "string"
+                  },
+                  "text": {
+                    "type": "string"
+                  },
+                  "topic": {
+                    "type": "string"
+                  },
+                  "scheduled_at": {
+                    "type": "string"
+                  },
+                  "test_mode": {
+                    "type": "boolean"
+                  },
+                  "attachments": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "filename": {
+                          "type": "string"
+                        },
+                        "content": {
+                          "type": "string"
+                        },
+                        "content_type": {
+                          "type": "string"
+                        },
+                        "content_id": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted"
           }
         }
       }
