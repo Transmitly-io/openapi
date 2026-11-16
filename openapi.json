@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Transmitly API",
-    "version": "1.48.0",
+    "version": "1.49.0",
     "description": "Durable email acceptance, delivery events and inbound routing. Acceptance (202) means committed to Postgres; delivered_to_mx means the remote MX accepted the message, not inbox placement.",
     "contact": {
       "email": "support@transmitly.io"
@@ -2520,6 +2520,49 @@
             "nullable": true
           },
           "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "BIMIVMCCase": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "domain_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "preparing",
+              "submitted",
+              "issued",
+              "published",
+              "expired",
+              "rejected"
+            ]
+          },
+          "ca_name": {
+            "type": "string"
+          },
+          "trademark_name": {
+            "type": "string"
+          },
+          "certificate_url": {
+            "type": "string"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string"
+          },
+          "updated_at": {
             "type": "string",
             "format": "date-time"
           }
@@ -5664,6 +5707,74 @@
                       "removed",
                       "rejected"
                     ]
+                  },
+                  "notes": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated"
+          }
+        }
+      }
+    },
+    "/v1/domains/{id}/bimi-case": {
+      "get": {
+        "summary": "Read the BIMI/VMC acquisition case",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Case or null"
+          }
+        }
+      },
+      "put": {
+        "summary": "Create or update the BIMI/VMC acquisition case",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string"
+                  },
+                  "ca_name": {
+                    "type": "string"
+                  },
+                  "trademark_name": {
+                    "type": "string"
+                  },
+                  "certificate_url": {
+                    "type": "string"
+                  },
+                  "expires_at": {
+                    "type": "string"
                   },
                   "notes": {
                     "type": "string"
